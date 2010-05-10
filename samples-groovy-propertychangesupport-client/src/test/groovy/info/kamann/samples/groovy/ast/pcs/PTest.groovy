@@ -33,10 +33,16 @@ class PTest {
 		BeanWithoutPropertyChangeSupport bean = new BeanWithoutPropertyChangeSupport()
 		bean.addPropertyChangeListener( listener)
 		
-		
 		println bean.support.listeners
 		
 		bean.setName "jjjj"
+		println "$result.name $result.oldValue $result.newValue"
+		
+		bean.setName "gggg"
+		println "$result.name $result.oldValue $result.newValue"
+		
+		bean.removePropertyChangeListener( listener)
+		bean.setName "kkkk"
 		println "$result.name $result.oldValue $result.newValue"
 	}
 

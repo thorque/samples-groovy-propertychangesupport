@@ -25,6 +25,12 @@ import org.codehaus.groovy.transform.ASTTransformation;
 class PropertyChangeSupportTransformation implements ASTTransformation, Opcodes {
 	static int PUBLIC = 1
 	
+	public PropertyChangeSupportTransformation(){
+		String.metaClass.toFirstLower << {
+			delegate[0].toLowerCase() + delegate.substring(1)
+		}
+	}
+	
 	public void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
 		
 		println "Start"
@@ -37,7 +43,7 @@ class PropertyChangeSupportTransformation implements ASTTransformation, Opcodes 
 		clazzNodes.each{ClassNode clazzNode ->
 			createPropertyChangeSupportField clazzNode
 			createPropertyChangeFieldAdd clazzNode
-			clazzNode.addMethod makeMainMethod(null)
+			createPropertyChangeFieldRemove clazzNode
 			
 			List methodNodes = clazzNode.getAllDeclaredMethods()
 			println methodNodes
@@ -52,23 +58,25 @@ class PropertyChangeSupportTransformation implements ASTTransformation, Opcodes 
 	}
 	
 	private void createSetterAddition(MethodNode methodNode){
-		//propertyChangeSupport.firePropertyChange("name", this.name, name);
+		String methodName = methodNode.name.substring(3).toFirstLower()
+		
 		def ast = new AstBuilder().buildFromSpec {
 			expression{
 				methodCall{
 					variable "support"
 					constant "firePropertyChange"
 					argumentList{
-						constant "name"
-						variable "this"
+						constant methodName
+						attribute {
+			                variable "this"
+			                constant "name"
+			            }
 						variable "name"
-						constant "name"
 					}
 				}
 			}
 		}
 		methodNode.code.statements.add(0, ast[0])
-		println ast
 	}
 	
 	private void createPropertyChangeSupportField(ClassNode classNode){
@@ -94,6 +102,30 @@ class PropertyChangeSupportTransformation implements ASTTransformation, Opcodes 
                         methodCall {
                         	variable "support"
                             constant "addPropertyChangeListener"
+                            argumentList {
+                                variable "listener"
+                            }
+                        }
+                    }
+                }
+                      
+					
+			}
+		}
+		MethodNode target = ast[0]
+		classNode.addMethod target
+	}
+	
+	private void createPropertyChangeFieldRemove(ClassNode classNode){
+		def ast = new AstBuilder().buildFromSpec {
+			method('removePropertyChangeListener', PUBLIC, Object) {
+				parameters { parameter 'listener': PropertyChangeListener.class }
+				exceptions {}
+				block { 
+					expression {
+                        methodCall {
+                        	variable "support"
+                            constant "removePropertyChangeListener"
                             argumentList {
                                 variable "listener"
                             }
