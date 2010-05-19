@@ -4,9 +4,8 @@ package info.kamann.samples.groovy.ast.pcs
 /**
  * @author kamann
  */
-
 @WithPropertySupport
-public class BeanWithoutPropertyChangeSupport {
+public class SimpleBean {
 	private String name;
 	private String street;
 	private String city;
