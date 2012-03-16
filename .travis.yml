@@ -1,0 +1,5 @@
+language: java
+script: 'git log --format=%s HEAD~1..HEAD | grep "fixes #" >/dev/null && mvn -e integration-test || mvn -e test'
+
+install: mvn --quiet -e validate
+ 
